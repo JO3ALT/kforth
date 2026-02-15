@@ -15,6 +15,8 @@ It provides the same core VM/interpreter (`kforth.c`) across both targets, with 
 
 - 32-bit cell Forth VM and dictionary
 - Primitive words in C + bootstrap extensions in Forth (`bootstrap.fth`)
+- Bootstrap control-flow words (`IF`/`ELSE`/`THEN`, `BEGIN`/`UNTIL`/`AGAIN`, `WHILE`/`REPEAT`)
+- Pascal-oriented helper words for output/memory/input (`PWRITE-*` incl. `PWRITE-HEX`, `PVAR*`/`PFIELD*`, `PNEXT`, `PREAD-*` incl. `PREADLN`)
 - REPL flow based on `QUIT`
 - Host and Arduino I/O abstraction layers
 - Shell-based test scripts

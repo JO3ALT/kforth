@@ -15,6 +15,8 @@ English README: [README.md](README.md)
 
 - 32bitセルのFORTH VMと辞書
 - C実装プリミティブ + `bootstrap.fth` によるFORTH側拡張
+- bootstrap制御語（`IF`/`ELSE`/`THEN`, `BEGIN`/`UNTIL`/`AGAIN`, `WHILE`/`REPEAT`）
+- Pascal向け補助語（出力/メモリ/入力: `PWRITE-*`（`PWRITE-HEX`含む）, `PVAR*`/`PFIELD*`, `PNEXT`, `PREAD-*`（`PREADLN`含む））
 - `QUIT` ベースのREPL
 - ホスト/ArduinoそれぞれのI/O抽象
 - シェルベースのテストスクリプト

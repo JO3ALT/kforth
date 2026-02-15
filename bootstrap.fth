@@ -71,7 +71,7 @@ CREATE CSTACK  32 ALLOT
 
 : IF     IMMEDIATE  0BR, >CS ;
 : THEN   IMMEDIATE  CS> PATCH ;
-: ELSE   IMMEDIATE  BR, >CS  CS> PATCH ;
+: ELSE   IMMEDIATE  BR, CS> PATCH >CS ;
 
 : BEGIN  IMMEDIATE  HEREC >CS ;
 : AGAIN  IMMEDIATE  POSTPONE BRANCH  CS> HEREC 1+ - ,C ;
@@ -103,6 +103,22 @@ CREATE CSTACK  32 ALLOT
   THEN
   S" FALSE" TYPE ;
 
+: HEXDIGIT ( u -- ch )
+  DUP 10 < IF
+    48 + EXIT
+  THEN
+  55 + ;
+
+: PWRITE-HEX ( n -- )
+  DUP 28 RSHIFT 15 AND HEXDIGIT EMIT
+  DUP 24 RSHIFT 15 AND HEXDIGIT EMIT
+  DUP 20 RSHIFT 15 AND HEXDIGIT EMIT
+  DUP 16 RSHIFT 15 AND HEXDIGIT EMIT
+  DUP 12 RSHIFT 15 AND HEXDIGIT EMIT
+  DUP 8  RSHIFT 15 AND HEXDIGIT EMIT
+  DUP 4  RSHIFT 15 AND HEXDIGIT EMIT
+      15 AND HEXDIGIT EMIT ;
+
 : PWRITE-CHAR ( u32 -- )
   DUP 128 < IF
     EMIT EXIT
@@ -129,6 +145,38 @@ CREATE CSTACK  32 ALLOT
 
 ( ----- parsing ----- )
 : PARSE-NAME  ( -- addr len )  BL PARSE ;
+
+: PNEXT ( -- addr len )
+  BEGIN
+    PARSE-NAME
+    DUP 0=
+  WHILE
+    2DROP
+    REFILL 0= ABORT" read: unexpected EOF"
+  REPEAT ;
+
+: PREAD-I32 ( -- n )
+  PNEXT
+  2DUP NUMBER? IF
+    >R 2DROP R> EXIT
+  THEN
+  2DROP ABORT" read integer: invalid token" ;
+
+: PREAD-BOOL ( -- b )
+  PREAD-I32 PBOOL ;
+
+: PREADLN ( -- )
+  #TIB @ >IN ! ;
+
+: PREAD-CHAR ( -- u32 )
+  PNEXT
+  2DUP NUMBER? IF
+    >R 2DROP R> EXIT
+  THEN
+  DUP 1 = IF
+    DROP C@ EXIT
+  THEN
+  2DROP ABORT" read char: use codepoint or single char" ;
 
 ( ----- number conversion signed using >NUMBER and BASE ----- )
 : (UNSIGNED) ( addr len -- u ok )
