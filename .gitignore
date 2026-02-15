@@ -1,0 +1,10 @@
+# Build artifacts
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+
+# Local/PlatformIO artifacts
+/.pio/
+
+# Provisional manuals (not uploaded for now)
+/docs/manuals/
