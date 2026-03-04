@@ -13,6 +13,8 @@
 #include <ctype.h>
 #include <stdint.h>
 #include <setjmp.h>
+#include <unistd.h>
+#include <sys/mman.h>
 
 #include "kf_io.h"
 #include "kf_dev.h"
@@ -544,6 +546,42 @@ static void p_CODESTORE(void){
   code_mem[(ucell)a] = v;
 }
 static void p_CCOMMA(void){ cell v=dpop(); ccomma(v); }
+
+/* native GO primitive: execute machine code placed in code_mem[cell_index] */
+static int code_mem_exec_ready = 0;
+
+static int ensure_code_mem_executable(void){
+#ifdef KFORTH_CPU32_GO
+  return 1;
+#else
+  if(code_mem_exec_ready) return 1;
+  long ps = sysconf(_SC_PAGESIZE);
+  if(ps <= 0) ps = 4096;
+  uintptr_t start = (uintptr_t)code_mem;
+  uintptr_t page  = start & ~((uintptr_t)ps - 1u);
+  uintptr_t end   = (uintptr_t)(code_mem + MEM_CODE_CELLS);
+  size_t len = (size_t)(end - page);
+  if(mprotect((void*)page, len, PROT_READ | PROT_WRITE | PROT_EXEC) != 0){
+    out_err("GO mprotect failed");
+    return 0;
+  }
+  code_mem_exec_ready = 1;
+  return 1;
+#endif
+}
+
+static void p_GO(void){
+  cell a = dpop();
+  if(a < 0 || (ucell)a >= (ucell)MEM_CODE_CELLS){ out_err_i("GO bad ", a); p_ABORT(); return; }
+  if(!ensure_code_mem_executable()){ p_ABORT(); return; }
+  typedef int (*native_entry_fn)(void);
+#ifdef KFORTH_CPU32_GO
+  native_entry_fn fn = (native_entry_fn)(void*)(&code_mem[(ucell)a]);
+#else
+  native_entry_fn fn = (native_entry_fn)(uintptr_t)&code_mem[(ucell)a];
+#endif
+  (void)fn();
+}
 
 /* I/O */
 static void p_EMIT(void){ cell v=dpop(); mf_emit((uint8_t)v); }
@@ -1103,6 +1141,7 @@ static void init_core(void){
   def_prim("CODE@", p_CODEAT,    0);
   def_prim("CODE!", p_CODESTORE, 0);
   def_prim(",C",    p_CCOMMA,    0);
+  def_prim("GO", p_GO, 0);
 
   def_prim("EMIT", p_EMIT, 0);
   def_prim("KEY",  p_KEY,  0);
