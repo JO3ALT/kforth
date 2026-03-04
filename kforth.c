@@ -965,7 +965,8 @@ static void p_NUMBERQ(void){
   }
 
   if(neg){
-    dpush((cell)(-((cell)acc)));
+    /* Keep 32-bit wrap semantics without signed-overflow UB. */
+    dpush((cell)(ucell)(0u - acc));
   }else{
     dpush((cell)acc);
   }
@@ -1049,11 +1050,31 @@ static void p_WORDS(void){
 static void compile_wordtok(int wi){ ccomma(MK_WORDTOK(wi)); }
 
 static int parse_number_c(const char *s, cell *out){
-  char *end=NULL;
-  long v = strtol(s, &end, 0);
-  if(end==s || *end!=0) return 0;
-  if(v < INT32_MIN || v > INT32_MAX) return 0;
-  *out = (cell)v;
+  if(s == NULL || *s == 0) return 0;
+
+  int neg = 0;
+  if(*s == '-'){
+    neg = 1;
+    s++;
+    if(*s == 0) return 0;
+  }
+
+  ucell base = (ucell)data_mem[A_BASE];
+  if(base < 2 || base > 36) base = 10;
+
+  ucell acc = 0;
+  for(; *s; s++){
+    int dv = digit_val((unsigned char)*s);
+    if(dv < 0 || (ucell)dv >= base) return 0;
+    acc = (ucell)(acc * base + (ucell)dv);
+  }
+
+  if(neg){
+    /* Keep 32-bit wrap semantics without signed-overflow UB. */
+    *out = (cell)(ucell)(0u - acc);
+  }else{
+    *out = (cell)acc;
+  }
   return 1;
 }
 
