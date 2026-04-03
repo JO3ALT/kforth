@@ -22,6 +22,14 @@ It provides the same core VM/interpreter (`kforth.c`) across both targets, with 
 - Host and Arduino I/O abstraction layers
 - Shell-based test scripts
 
+## kforthc Contract Notes
+
+- For string output in `kforthc`-generated code, `TYPE` is the primary contract surface: use `S" ..." TYPE`.
+- `PWRITE-I32`, `PWRITE-BOOL`, `PWRITE-CHAR`, `PWRITELN`, and `PWRITE-HEX` remain the Pascal-oriented runtime helpers expected by generated code.
+- `.` and `EMIT` are available as integer and char aliases, but they are not the preferred backend contract for generated output.
+- `PWRITE-HEX` emits uppercase 8-digit hexadecimal text such as `000000FF`.
+- The current `kforthc` subset assumes `S" ..."` only when immediately consumed by `TYPE`, `READ-F32`, or `FNUMBER?`.
+
 ## Linux Build and Run
 
 ```bash
@@ -29,6 +37,16 @@ cmake -S . -B build
 cmake --build build
 cat bootstrap.fth - | ./build/kforth
 ```
+
+To target smaller systems, the VM memory sizes can be reduced at build time with compiler defines:
+
+```bash
+cmake -S . -B build-small \
+  -DCMAKE_C_FLAGS="-DKFORTH_MEM_CODE_CELLS=4096 -DKFORTH_MEM_DATA_CELLS=4096 -DKFORTH_DS_DEPTH=64 -DKFORTH_RS_DEPTH=64 -DKFORTH_DICT_MAX=512"
+cmake --build build-small
+```
+
+The key memory-related knobs are `KFORTH_MEM_CODE_CELLS` and `KFORTH_MEM_DATA_CELLS`. Stack and dictionary sizes are also configurable with `KFORTH_DS_DEPTH`, `KFORTH_RS_DEPTH`, and `KFORTH_DICT_MAX`.
 
 Bootstrap smoke check:
 
@@ -39,6 +57,8 @@ Bootstrap smoke check:
 ## Arduino Build (PlatformIO)
 
 This repository includes PlatformIO settings to build the same core for Arduino targets.
+
+For small embedded targets, tune the same compile-time macros to fit the available RAM/flash budget.
 
 ```bash
 pio run -e esp32dev

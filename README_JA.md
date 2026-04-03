@@ -22,6 +22,14 @@ English README: [README.md](README.md)
 - ホスト/ArduinoそれぞれのI/O抽象
 - シェルベースのテストスクリプト
 
+## kforthc 契約メモ
+
+- `kforthc` 生成コードの文字列出力では、`TYPE` を正式契約として使います。つまり `S" ..." TYPE` を使います。
+- `PWRITE-I32`, `PWRITE-BOOL`, `PWRITE-CHAR`, `PWRITELN`, `PWRITE-HEX` は、引き続き Pascal 向け runtime helper として使われます。
+- `.` と `EMIT` も使えますが、生成コードの優先 backend 契約ではありません。
+- `PWRITE-HEX` は `000000FF` のような大文字 8 桁の 16 進文字列を出力します。
+- 現在の `kforthc` subset では、`S" ..."` は直後が `TYPE`, `READ-F32`, `FNUMBER?` の場合を前提にします。
+
 ## Linuxでのビルドと実行
 
 ```bash
@@ -29,6 +37,16 @@ cmake -S . -B build
 cmake --build build
 cat bootstrap.fth - | ./build/kforth
 ```
+
+小さなシステム向けには、ビルド時 define で VM メモリ量を縮められます:
+
+```bash
+cmake -S . -B build-small \
+  -DCMAKE_C_FLAGS="-DKFORTH_MEM_CODE_CELLS=4096 -DKFORTH_MEM_DATA_CELLS=4096 -DKFORTH_DS_DEPTH=64 -DKFORTH_RS_DEPTH=64 -DKFORTH_DICT_MAX=512"
+cmake --build build-small
+```
+
+主な調整点は `KFORTH_MEM_CODE_CELLS` と `KFORTH_MEM_DATA_CELLS` です。必要に応じて `KFORTH_DS_DEPTH`, `KFORTH_RS_DEPTH`, `KFORTH_DICT_MAX` も縮められます。
 
 bootstrap読込確認:
 
@@ -39,6 +57,8 @@ bootstrap読込確認:
 ## Arduinoでのビルド（PlatformIO）
 
 このリポジトリには、Arduino向けに同一コアをビルドするPlatformIO設定が含まれます。
+
+RAM/flash に制約があるターゲットでは、同じ compile-time macro を使ってサイズを調整してください。
 
 ```bash
 pio run -e esp32dev

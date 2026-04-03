@@ -23,6 +23,11 @@
 typedef int32_t  cell;
 typedef uint32_t ucell;
 
+/*
+  Memory sizing is intentionally configurable at build time.
+  Keep the defaults convenient for host use, but allow much smaller values
+  for constrained targets by overriding these macros with compiler flags.
+*/
 #ifndef KFORTH_MEM_CODE_CELLS
 #define KFORTH_MEM_CODE_CELLS 32768
 #endif

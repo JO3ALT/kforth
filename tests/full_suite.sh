@@ -200,6 +200,7 @@ core_suite() {
   expect_contains "wrapper MOD" $'7 3 MOD .\n' out "1 "
   expect_contains "WITHIN true" $'5 1 10 WITHIN .\n' out "-1 "
   expect_contains "/STRING + TYPE" $'S" HELLO" 2 /STRING TYPE\n' out "LLO"
+  expect_contains "PWRITE-HEX uppercase" $'255 PWRITE-HEX\n' out "000000FF"
   expect_contains "colon definition literal" $': INC 1+ ; 41 INC .\n' out "42 "
   expect_contains "IF THEN definition" $': ABS DUP 0< IF NEGATE THEN ; -5 ABS .\n' out "5 "
   expect_contains "DO LOOP + I" $': SUM10 0 11 1 DO I + LOOP ; SUM10 .\n' out "55 "
@@ -220,7 +221,7 @@ core_suite() {
   expect_contains "UNLOOP + EXIT" $': UTEST 0 5 0 DO I 2 = IF UNLOOP EXIT THEN 1 + LOOP ; UTEST .\n' out "2 "
   expect_contains "IMMEDIATE sees compile state" $': SSTATE STATE @ . ; IMMEDIATE : TST SSTATE ;\n' out "1 "
 
-  expect_contains "BASE set/get" $'16 BASE ! BASE @ . 10 BASE ! BASE @ .\n' out "16 10 "
+  expect_contains "BASE set/get" $'16 BASE ! BASE @ . 5 5 + BASE ! BASE @ .\n' out "16 10 "
   expect_contains ">IN starts at 0" $'>IN @ .\n' out "0 "
   expect_contains "SOURCE length equals #TIB" $'SOURCE NIP #TIB @ = .\n' out "-1 "
   expect_contains "SOURCE addr equals TIB" $'SOURCE DROP TIB = .\n' out "-1 "
