@@ -2,6 +2,7 @@
 /build/
 /CMakeFiles/
 /CMakeCache.txt
+/kforth
 
 # Local/PlatformIO artifacts
 /.pio/
